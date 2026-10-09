@@ -1,0 +1,29 @@
+{
+  "name": "mhrshopping",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MehrShopping - full-stack Persian/English e-commerce platform (API + web storefront)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @mhr/api & npm run dev -w @mhr/web & wait",
+    "dev:api": "npm run dev -w @mhr/api",
+    "dev:web": "npm run dev -w @mhr/web",
+    "build": "npm run build -w @mhr/api && npm run build -w @mhr/web",
+    "test": "npm run test -w @mhr/api && npm run test -w @mhr/web",
+    "lint": "npm run lint -w @mhr/api && npm run lint -w @mhr/web",
+    "typecheck": "npm run typecheck -w @mhr/api && npm run typecheck -w @mhr/web",
+    "db:migrate": "npm run db:migrate -w @mhr/api",
+    "db:seed": "npm run db:seed -w @mhr/api",
+    "db:reset": "npm run db:reset -w @mhr/api",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,yml}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify:
+    name: Typecheck · Test · Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mhr
+          POSTGRES_PASSWORD: mhr
+          POSTGRES_DB: mhrshop
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mhr" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: API typecheck
+        run: npm run typecheck -w @mhr/api
+
+      - name: Web typecheck
+        run: npm run typecheck -w @mhr/web
+
+      - name: Unit tests
+        run: npm run test -w @mhr/api
+
+      - name: Prisma validate + migrate
+        env:
+          DATABASE_URL: postgresql://mhr:mhr@localhost:5432/mhrshop?schema=public
+        run: |
+          npx prisma validate --schema apps/api/prisma/schema.prisma
+          npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+
+      - name: Seed (proves schema ↔ seed stay in sync)
+        env:
+          DATABASE_URL: postgresql://mhr:mhr@localhost:5432/mhrshop?schema=public
+        run: npm run db:seed -w @mhr/api
+
+      - name: Build API
+        run: npm run build -w @mhr/api
+
+      - name: Build web
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+        run: npm run build -w @mhr/web
